@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Viewer Login</title>
+
+<style>
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Arial;
+    background:#f5f5f7;
+    margin:0;
+    padding:40px;
+}
+
+.container {
+    max-width:900px;
+    margin:auto;
+}
+
+h1 {
+    text-align:center;
+}
+
+.grid {
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+    gap:20px;
+}
+
+
+.card {
+
+    background:white;
+    border-radius:20px;
+    padding:20px;
+    text-align:center;
+    cursor:pointer;
+
+    box-shadow:
+        0 10px 30px rgba(0,0,0,.08);
+
+    transition:.2s;
+
+}
+
+
+.card:hover {
+    transform:translateY(-5px);
+}
+
+
+.profile-image {
+
+    width:120px;
+    height:120px;
+
+    border-radius:50%;
+    object-fit:cover;
+
+}
+
+
+.lock {
+    font-size:20px;
+}
+
+
+button {
+
+    background:#007aff;
+    color:white;
+
+    border:none;
+    border-radius:12px;
+
+    padding:12px 20px;
+
+    cursor:pointer;
+
+}
+
+
+input {
+
+    padding:12px;
+    border-radius:10px;
+    border:1px solid #ccc;
+
+    width:150px;
+
+    text-align:center;
+
+    font-size:18px;
+
+}
+
+
+.hidden {
+    display:none;
+}
+
+
+.modal {
+
+    background:white;
+
+    padding:30px;
+
+    border-radius:20px;
+
+    text-align:center;
+
+    box-shadow:0 20px 50px rgba(0,0,0,.15);
+
+}
+
+
+
+</style>
+
+</head>
+
+
+<body>
+
+
+<div class="container">
+
+<h1 id="title">
+Who are you?
+</h1>
+
+
+<div id="content"></div>
+
+
+</div>
+
+
+
+<script>
+
+
+const API = "https://eac-coastaltrip-dev-ed.develop.my.site.com/app/services/apexrest/v1/viewer";
+
+
+let viewer = null;
+let pin = null;
+
+
+
+async function api(url) {
+
+    let response = await fetch(url);
+
+    if(!response.ok){
+        throw new Error(await response.text());
+    }
+
+    return await response.json();
+
+}
+
+
+
+//==========================================
+// Load Profiles
+//==========================================
+
+
+async function loadProfiles(){
+
+    let data = await api(
+        API + "/getprofiles"
+    );
+
+
+    renderProfiles(data.profiles);
+
+}
+
+
+
+function renderProfiles(profiles){
+
+
+    let html="<div class='grid'>";
+
+
+    profiles.forEach(p=>{
+
+
+        html += `
+
+        <div class="card"
+             onclick="selectProfile('${p.viewer_id}',
+             ${p.has_pin},
+             '${p.profile_name}',
+             '${p.profile_picture}')">
+
+
+            <img class="profile-image"
+                 src="${p.profile_picture}">
+
+
+            <h2>
+
+                ${p.profile_name}
+
+                ${p.has_pin ? 
+                "<span class='lock'>🔒</span>"
+                :
+                ""}
+
+            </h2>
+
+
+        </div>
+
+        `;
+
+
+    });
+
+
+    html+="</div>";
+
+    content.innerHTML=html;
+
+
+}
+
+
+
+
+
+//==========================================
+// Profile Selected
+//==========================================
+
+
+function selectProfile(id,locked,name,image){
+
+
+    viewer=id;
+
+
+    if(locked){
+
+        content.innerHTML=`
+
+        <div class="modal">
+
+        <img class="profile-image"
+             src="${image}">
+
+        <h2>${name} 🔒</h2>
+
+
+        <p>
+        Enter PIN
+        </p>
+
+
+        <input id="pin"
+               type="password"
+               maxlength="4">
+
+
+        <br><br>
+
+
+        <button onclick="verifyPin()">
+        Unlock
+        </button>
+
+
+        </div>
+
+        `;
+
+    }
+
+    else {
+
+        pin=null;
+        loadExperiences();
+
+    }
+
+}
+
+
+
+
+
+//==========================================
+// Verify PIN
+//==========================================
+
+
+async function verifyPin(){
+
+
+    pin=document.getElementById("pin").value;
+
+
+    let result = await api(
+
+        `${API}/verifypin?
+        viewer=${viewer}&pin=${pin}`
+
+    );
+
+
+    if(result.success){
+
+        loadExperiences();
+
+    }
+
+    else {
+
+        alert(result.message);
+
+    }
+
+
+}
+
+
+
+
+//==========================================
+// Experiences
+//==========================================
+
+
+async function loadExperiences(){
+
+
+    let url =
+    `${API}/getexperiences?
+    viewer=${viewer}`;
+
+
+    if(pin){
+
+        url += `&pin=${pin}`;
+
+    }
+
+
+    let data = await api(url);
+
+
+    renderExperiences(data);
+
+
+
+}
+
+
+
+
+function renderExperiences(experiences){
+
+
+    title.innerHTML="Choose Experience";
+
+
+    let html="<div class='grid'>";
+
+
+    experiences.forEach(e=>{
+
+
+        html+=`
+
+        <div class="card"
+             onclick="loadHomepage('${e.id}')">
+
+
+            <h2>${e.name}</h2>
+
+            <p>
+            ${e.description ?? ""}
+            </p>
+
+
+        </div>
+
+        `;
+
+
+    });
+
+
+    html+="</div>";
+
+
+    content.innerHTML=html;
+
+
+}
+
+
+
+
+//==========================================
+// Homepage
+//==========================================
+
+
+async function loadHomepage(experience){
+
+
+    let url =
+    `https://eac-coastaltrip-dev-ed.develop.my.site.com/app/service/apexrest/v1/homepage?
+    viewer=${viewer}
+    &experience=${experience}`;
+
+
+    if(pin){
+
+        url += `&pin=${pin}`;
+
+    }
+
+
+    let homepage = await api(url);
+
+
+    renderHomepage(homepage);
+
+
+}
+
+
+
+function renderHomepage(data){
+
+
+    title.innerHTML=data.title ?? "Homepage";
+
+
+    let html="<div class='grid'>";
+
+
+    data.cards.forEach(card=>{
+
+
+        html+=`
+
+        <div class="card">
+
+
+            <img class="profile-image"
+                 src="${card.image_url}">
+
+
+            <h2>
+            ${card.label}
+            </h2>
+
+
+            <p>
+            ${card.description ?? ""}
+            </p>
+
+
+        </div>
+
+
+        `;
+
+
+    });
+
+
+    html+="</div>";
+
+
+    content.innerHTML=html;
+
+
+}
+
+
+
+loadProfiles();
+
+
+</script>
+
+
+</body>
+</html>
