@@ -2,119 +2,183 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>Viewer Login</title>
+<title>EAC Coastal</title>
 
 <style>
 
 body {
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Arial;
-    background:#f5f5f7;
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial;
+    background:#0f0f11;
+    color:white;
     margin:0;
     padding:40px;
 }
 
+
 .container {
-    max-width:900px;
+    max-width:1100px;
     margin:auto;
 }
+
 
 h1 {
     text-align:center;
 }
 
+
+.subtitle {
+    text-align:center;
+    color:#aaa;
+    margin-bottom:30px;
+}
+
+
 .grid {
+
     display:grid;
-    grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
-    gap:20px;
+
+    grid-template-columns:
+        repeat(auto-fit,minmax(260px,1fr));
+
+    gap:24px;
+
 }
 
 
 .card {
 
-    background:white;
-    border-radius:20px;
+    background:#1c1c1f;
+
+    border-radius:22px;
+
     padding:20px;
+
     text-align:center;
+
     cursor:pointer;
 
-    box-shadow:
-        0 10px 30px rgba(0,0,0,.08);
+    border:1px solid #2d2d32;
 
-    transition:.2s;
+    box-shadow:
+        0 10px 30px rgba(0,0,0,.4);
+
+    transition:.25s;
 
 }
 
 
 .card:hover {
+
     transform:translateY(-5px);
+
+    background:#242428;
+
+}
+
+
+.card img {
+
+    width:100%;
+
+    height:160px;
+
+    object-fit:cover;
+
+    border-radius:16px;
+
 }
 
 
 .profile-image {
 
-    width:120px;
-    height:120px;
+    width:120px !important;
 
-    border-radius:50%;
-    object-fit:cover;
+    height:120px !important;
+
+    border-radius:50% !important;
+
+}
+
+
+.card h2 {
+
+    margin:15px 0 10px;
+
+}
+
+
+.card p {
+
+    color:#bbb;
+
+    line-height:1.5;
 
 }
 
 
 .lock {
-    font-size:20px;
+
+    margin-left:8px;
+
 }
 
 
 button {
 
-    background:#007aff;
+    background:#0a84ff;
+
     color:white;
 
     border:none;
+
     border-radius:12px;
 
-    padding:12px 20px;
+    padding:12px 25px;
 
     cursor:pointer;
+
+    font-size:16px;
 
 }
 
 
 input {
 
+    background:#161618;
+
+    color:white;
+
+    border:1px solid #444;
+
+    border-radius:12px;
+
     padding:12px;
-    border-radius:10px;
-    border:1px solid #ccc;
 
     width:150px;
 
     text-align:center;
 
-    font-size:18px;
+    font-size:22px;
 
-}
+    letter-spacing:8px;
 
-
-.hidden {
-    display:none;
 }
 
 
 .modal {
 
-    background:white;
+    background:#1c1c1f;
 
-    padding:30px;
+    border-radius:24px;
 
-    border-radius:20px;
+    padding:35px;
 
     text-align:center;
 
-    box-shadow:0 20px 50px rgba(0,0,0,.15);
+    box-shadow:
+        0 20px 60px rgba(0,0,0,.6);
 
 }
-
 
 
 </style>
@@ -142,7 +206,12 @@ Who are you?
 <script>
 
 
-const API = "https://eac-coastaltrip-dev-ed.develop.my.site.com/app/services/apexrest/v1/viewer";
+const API =
+"https://eac-coastaltrip-dev-ed.develop.my.site.com/app/services/apexrest/v1/viewer";
+
+
+const HOMEPAGE_API =
+"https://eac-coastaltrip-dev-ed.develop.my.site.com/app/services/apexrest/v1/homepage";
 
 
 let viewer = null;
@@ -150,13 +219,19 @@ let pin = null;
 
 
 
-async function api(url) {
+async function api(url){
+
+    console.log(url);
 
     let response = await fetch(url);
 
+
     if(!response.ok){
+
         throw new Error(await response.text());
+
     }
+
 
     return await response.json();
 
@@ -164,15 +239,16 @@ async function api(url) {
 
 
 
-//==========================================
-// Load Profiles
-//==========================================
+
+//==================================================
+// Profiles
+//==================================================
 
 
 async function loadProfiles(){
 
     let data = await api(
-        API
+        `${API}/getprofiles`
     );
 
 
@@ -185,19 +261,19 @@ async function loadProfiles(){
 function renderProfiles(profiles){
 
 
-    let html="<div class='grid'>";
+    content.innerHTML = `
 
+    <div class="grid">
 
-    profiles.forEach(p=>{
-
-
-        html += `
+    ${profiles.map(p=>`
 
         <div class="card"
-             onclick="selectProfile('${p.viewer_id}',
-             ${p.has_pin},
-             '${p.profile_name}',
-             '${p.profile_picture}')">
+             onclick="selectProfile(
+                '${p.viewer_id}',
+                ${p.has_pin},
+                '${p.profile_name}',
+                '${p.profile_picture}'
+             )">
 
 
             <img class="profile-image"
@@ -206,27 +282,21 @@ function renderProfiles(profiles){
 
             <h2>
 
-                ${p.profile_name}
+            ${p.profile_name}
 
-                ${p.has_pin ? 
-                "<span class='lock'>🔒</span>"
-                :
-                ""}
+            ${p.has_pin ? "🔒" : ""}
 
             </h2>
 
 
         </div>
 
-        `;
 
+    `).join("")}
 
-    });
+    </div>
 
-
-    html+="</div>";
-
-    content.innerHTML=html;
+    `;
 
 
 }
@@ -234,10 +304,9 @@ function renderProfiles(profiles){
 
 
 
-
-//==========================================
-// Profile Selected
-//==========================================
+//==================================================
+// Select Profile
+//==================================================
 
 
 function selectProfile(id,locked,name,image){
@@ -248,68 +317,88 @@ function selectProfile(id,locked,name,image){
 
     if(locked){
 
-        content.innerHTML=`
+
+        content.innerHTML = `
 
         <div class="modal">
 
-        <img class="profile-image"
-             src="${image}">
 
-        <h2>${name} 🔒</h2>
-
-
-        <p>
-        Enter PIN
-        </p>
+            <img class="profile-image"
+                 src="${image}">
 
 
-        <input id="pin"
-               type="password"
-               maxlength="4">
+            <h2>
+            ${name} 🔒
+            </h2>
 
 
-        <br><br>
+            <p>
+            Enter PIN
+            </p>
 
 
-        <button onclick="verifyPin()">
-        Unlock
-        </button>
+            <input
+                id="pin"
+                type="password"
+                maxlength="4"
+                inputmode="numeric"
+                oninput="
+                this.value=this.value.replace(/[^0-9]/g,'')
+                ">
+
+
+            <br><br>
+
+
+            <button onclick="verifyPin()">
+                Unlock
+            </button>
 
 
         </div>
 
         `;
 
+
     }
 
     else {
 
         pin=null;
+
         loadExperiences();
 
     }
+
 
 }
 
 
 
 
-
-//==========================================
+//==================================================
 // Verify PIN
-//==========================================
+//==================================================
 
 
 async function verifyPin(){
 
 
-    pin=document.getElementById("pin").value;
+    pin =
+    document.getElementById("pin").value;
+
+
+    if(pin.length !== 4){
+
+        alert("PIN must be 4 digits.");
+
+        return;
+
+    }
 
 
     let result = await api(
-
         `${API}/verifypin?viewer=${viewer}&pin=${pin}`
-
     );
 
 
@@ -331,9 +420,9 @@ async function verifyPin(){
 
 
 
-//==========================================
+//==================================================
 // Experiences
-//==========================================
+//==================================================
 
 
 async function loadExperiences(){
@@ -355,8 +444,6 @@ async function loadExperiences(){
 
     renderExperiences(data);
 
-
-
 }
 
 
@@ -365,22 +452,24 @@ async function loadExperiences(){
 function renderExperiences(experiences){
 
 
-    title.innerHTML="Choose Experience";
+    title.innerHTML =
+    "Choose Experience";
 
 
-    let html="<div class='grid'>";
+    content.innerHTML = `
 
+    <div class="grid">
 
-    experiences.forEach(e=>{
-
-
-        html+=`
+    ${experiences.map(e=>`
 
         <div class="card"
              onclick="loadHomepage('${e.id}')">
 
 
-            <h2>${e.name}</h2>
+            <h2>
+            ${e.name}
+            </h2>
+
 
             <p>
             ${e.description ?? ""}
@@ -389,16 +478,13 @@ function renderExperiences(experiences){
 
         </div>
 
-        `;
+
+    `).join("")}
 
 
-    });
+    </div>
 
-
-    html+="</div>";
-
-
-    content.innerHTML=html;
+    `;
 
 
 }
@@ -406,16 +492,16 @@ function renderExperiences(experiences){
 
 
 
-//==========================================
+//==================================================
 // Homepage
-//==========================================
+//==================================================
 
 
 async function loadHomepage(experience){
 
 
     let url =
-    `https://eac-coastaltrip-dev-ed.develop.my.site.com/app/services/apexrest/v1/homepage?viewer=${viewer}&experience=${experience}`;
+    `${HOMEPAGE_API}?viewer=${viewer}&experience=${experience}`;
 
 
     if(pin){
@@ -425,35 +511,44 @@ async function loadHomepage(experience){
     }
 
 
-    let homepage = await api(url);
+    let data = await api(url);
 
 
-    renderHomepage(homepage);
+    renderHomepage(data);
 
 
 }
 
 
 
+
 function renderHomepage(data){
 
 
-    title.innerHTML=data.title ?? "Homepage";
+    title.innerHTML =
+    data.title ?? "Homepage";
 
 
-    let html="<div class='grid'>";
+    content.innerHTML = `
 
 
-    data.cards.forEach(card=>{
+    <div class="subtitle">
+
+        ${data.description ?? ""}
+
+    </div>
 
 
-        html+=`
-
-        <div class="card">
+    <div class="grid">
 
 
-            <img class="profile-image"
-                 src="${card.image_url}">
+    ${data.cards.map(card=>`
+
+        <div class="card"
+             onclick="openTarget('${card.target ?? ""}')">
+
+
+            <img src="${card.image_url}">
 
 
             <h2>
@@ -469,19 +564,33 @@ function renderHomepage(data){
         </div>
 
 
-        `;
+    `).join("")}
 
 
-    });
+    </div>
 
 
-    html+="</div>";
-
-
-    content.innerHTML=html;
+    `;
 
 
 }
+
+
+
+
+function openTarget(target){
+
+
+    if(target){
+
+        window.open(target,"_blank");
+
+    }
+
+
+}
+
+
 
 
 
