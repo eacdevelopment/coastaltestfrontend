@@ -308,8 +308,7 @@ async function verifyPin(){
 
     let result = await api(
 
-        `${API}/verifypin?
-        viewer=${viewer}&pin=${pin}`
+        `${API}/verifypin?viewer=${viewer}&pin=${pin}`
 
     );
 
@@ -341,8 +340,7 @@ async function loadExperiences(){
 
 
     let url =
-    `${API}/getexperiences?
-    viewer=${viewer}`;
+    `${API}/getexperiences?viewer=${viewer}`;
 
 
     if(pin){
